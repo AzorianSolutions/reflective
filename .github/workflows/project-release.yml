@@ -59,12 +59,12 @@ jobs:
           name: python-package-distributions
           path: dist/
 
-      # Download the distribution files from the artifacts
-      - name: Download all the dists
-        uses: actions/download-artifact@v3
+      # Upload the distribution artifacts to PyPi production environment
+      - name: Publish Package (PyPi)
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          name: python-package-distributions
-          path: dist/
+          packages-dir: dist/
+          password: ${{ secrets.PYPI_TOKEN }}
 
       # Sign the distribution files with Sigstore
       - name: Sign the dists with Sigstore
@@ -92,10 +92,3 @@ jobs:
           gh release upload
           '${{ github.ref_name }}' dist/**
           --repo '${{ github.repository }}'
-
-      # Upload the distribution artifacts to PyPi production environment
-      - name: Publish Package (PyPi)
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: dist/
-          password: ${{ secrets.PYPI_TOKEN }}
