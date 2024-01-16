@@ -79,7 +79,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: >-
-          gh release create
+          gh release create -d
           '${{ github.ref_name }}'
           --repo '${{ github.repository }}'
           --notes ""
