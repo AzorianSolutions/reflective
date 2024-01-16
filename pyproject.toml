@@ -1,0 +1,23 @@
+[project]
+name = "reflective"
+version = "0.1.0"
+authors = [
+  { name="Azorian Solutions", email="help@azorian.solutions" },
+]
+description = "Reflective provides a plethora of ways to access and manipulate structured data."
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.6"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/AzorianSolutions/reflective"
+"Bug Tracker" = "https://github.com/AzorianSolutions/reflective/issues"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

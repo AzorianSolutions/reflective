@@ -1,0 +1,17 @@
+# Files created by Python
+*.pyc
+__pycache__
+# Files created by Python Pip install
+*.egg-info
+build
+# Python Pip packaging files
+dist
+# Files created by JetBrains IDEs
+.idea
+# Files created by Python PyTest
+.pytest*
+# Python virtual environment
+venv
+# Dev Files
+pg.py
+lib.py

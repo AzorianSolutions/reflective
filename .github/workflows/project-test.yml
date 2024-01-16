@@ -1,0 +1,81 @@
+name: 'Build'
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'dev'
+      - 'main'
+      - 'dependabot/**'
+      - 'feature/**'
+      - 'issue/**'
+      - 'release/**'
+    paths:
+      - src/**
+      - tests/**
+      - setup.py
+  pull_request:
+    branches:
+      - 'dev'
+      - 'main'
+      - 'dependabot/**'
+      - 'feature/**'
+      - 'issue/**'
+      - 'release/**'
+    paths:
+      - src/**
+      - tests/**
+      - setup.py
+
+jobs:
+  test-build-test-index-package:
+    name: PyPi Package Test/Build
+    runs-on: ubuntu-22.04
+
+    steps:
+      # Checkout the repository
+      - name: Repository Checkout
+        uses: actions/checkout@v4
+
+      # Set up the environment to run Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ">=3.6"
+
+      # Set up the environment to run the latest Python build, test, and publish tools
+      - name: Set Up Build & Test Environment
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install --upgrade setuptools
+          python3 -m pip install --upgrade wheel
+          python3 -m pip install --upgrade pytest
+          python3 -m pip install --upgrade twine
+
+      # Install the package from source
+      - name: Install Source Code
+        run: |
+          python3 -m pip install -e .
+
+      # Run the package tests
+      - name: Test Source Code
+        run: |
+          python3 -m pytest -v
+
+      # Build the package
+      - name: Build Package
+        run: |
+          python3 -m pip install --upgrade build
+          python3 -m build
+
+      # Check the distribution files with Twine
+      - name: Test Package
+        run: |
+          python3 -m twine check dist/*
+
+      # Store the distribution files as artifacts
+      - name: Store Distribution Packages
+        uses: actions/upload-artifact@v3
+        with:
+          name: python-package-distributions
+          path: dist/

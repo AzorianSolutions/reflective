@@ -1,0 +1,58 @@
+---
+name: 🐛 Bug Report
+description: Report a reproducible bug in a specific release of Reflective
+labels: ["bug / broken-feature"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        **NOTE:** This form is only for reporting _reproducible bugs_ in a current Reflect
+        installation. If you're having trouble with installation or just looking for
+        assistance with using Reflect, please visit our
+        [discussion forum](https://github.com/AzorianSolutions/reflective/discussions) instead.
+  - type: dropdown
+    attributes:
+      label: Reflective version
+      description: What version of Reflective are you currently running?
+      options:
+        - "0.1.0"
+        - "0.1.2"
+        - "0.1.3"
+        - "0.1.4"
+        - "0.1.5"
+        - "0.1.6"
+        - "0.1.7"
+        - "0.1.8"
+        - "0.1.9"
+        - "1.0.0"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to Reproduce
+      description: >
+        Describe in detail the exact steps that someone else can take to
+        reproduce this bug using the current stable release of Reflect. Begin with detailing the
+        creation of any necessary data objects and call out every operation being
+        performed explicitly.
+      placeholder: |
+        1. Import core Reflect object using `from reflect import Reflect`
+        2. Create the data structure using `data = {'attr1': {'key1': 'value1'}, 'tags': ['tag1', 'tag2']}`
+        3. Create a new instance of Reflect using `r = Reflect.reflect(data)`
+        4. Print the value using `print(r.attr1['key1']('tags.0')`
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: I should have received the value for the given reference.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Observed Behavior
+      description: What happened instead?
+      placeholder: An exception occurred when I execute the code. That exception ...
+    validations:
+      required: true
