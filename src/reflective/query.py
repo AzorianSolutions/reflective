@@ -1,3 +1,5 @@
+from __future__ import annotations
+from collections import UserList
 from typing import Union
 
 DEFAULT_DELIMITER = '/'
@@ -93,7 +95,7 @@ class Query:
                     continue
 
                 # Convert slice references to slice objects
-                slice_match = re.fullmatch(r'^(\-?[0-9]+)?\:(\-?[0-9]+)?(?:\:(\-?[0-9]+)?)?$', component)
+                slice_match = re.fullmatch(r'^(-?[0-9]+)?:(-?[0-9]+)?(?::(-?[0-9]+)?)?$', component)
 
                 if slice_match is not None:
                     start = slice_match.group(1)
@@ -113,9 +115,108 @@ class Query:
                     continue
 
 
-class QueryResult:
-    pass
+class QueryResult(UserList):
+    """ This class provides a data object to represent the result of a query. It inherently mimics the behavior of
+     a list. """
+
+    _query: Query
+    """ The query that was executed. """
+
+    @property
+    def query(self) -> Query:
+        """ Returns the query that was executed. """
+        return self._query
+
+    def __init__(self, query: Query, data: list):
+        """ Initializes a new QueryResult object. """
+        self._query = query
+        super().__init__(data)
 
 
 class QueryManager:
-    pass
+    """ This class provides an interface for executing queries on Reflective instances. """
+
+    _reflective: 'Reflective'
+    """ The Reflective instance that the QueryManager is bound to. """
+
+    @property
+    def reflective(self) -> 'Reflective':
+        """ Returns the Reflective instance that the QueryManager is bound to. """
+        return self._reflective
+
+    @property
+    def core(self) -> 'RCore':
+        """ Returns the RCore instance that the QueryManager is bound to. """
+        return self._reflective()
+
+    def __init__(self, reflective: 'Reflective'):
+        """ Initializes a new QueryManager object. """
+        self._reflective = reflective
+
+    def __call__(self, query: Union[str, int, slice, Query]) -> QueryResult:
+        """ Executes a query on the bound Reflective instance. """
+        return self.query(query)
+
+    def query(self, query: Union[str, int, slice, Query], use_cache: bool = False) -> QueryResult:
+        """ Executes a query on the bound Reflective instance. """
+        from functools import reduce
+
+        # Convert the query to a Query object if it isn't already
+        if type(query) is not Query:
+            query = Query(query)
+
+        cache_key = self.build_cache_key(query)
+
+        # If caching is enabled, check if the query is already cached
+        if use_cache:
+            if cache_key in self.core.cache:
+                return self.core.cache[cache_key]
+
+        results: list = []
+        path = self.core.path_list + query.path
+        ref: Union['Reflective', None] = None
+        found: bool = True
+
+        try:
+            # Reduce the reference based on the query path components.
+            ref = reduce(lambda c, k: c[k], path, self._reflective().root)
+        except (KeyError, TypeError):
+            # Could not find a matching reference
+            found = False
+
+        if found and ref is not None:
+            if type(path[-1]) is slice and isinstance(ref, list):
+                for item in ref:
+                    results.append(item)
+            else:
+                results.append(ref)
+
+        self.core.cache[cache_key] = QueryResult(query, results)
+
+        return self.core.cache[cache_key]
+
+    def build_cache_key(self, query: Union[str, int, slice, Query]) -> str:
+        """ Builds a cache key for the given query. """
+        import hashlib
+        import json
+
+        # Convert the query to a Query object if it isn't already
+        if type(query) is not Query:
+            query = Query(query)
+
+        path = query.path.copy() if query.is_relative else self.core.path_list + query.path
+
+        for i, component in enumerate(path):
+            if type(component) is slice:
+                start = component.start if component.start is not None else ''
+                stop = component.stop if component.stop is not None else ''
+                step = component.step if component.step is not None else ''
+                path[i] = f'{start}:{stop}:{step}'
+
+        # Build the cache key base
+        cache_key = query.delimiter.join(path)
+
+        # Generate the cache key
+        cache_key = hashlib.md5(json.dumps(cache_key).encode('utf-8')).hexdigest()
+
+        return cache_key

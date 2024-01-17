@@ -1,5 +1,6 @@
 import re
 from typing import Union
+from reflective.query import QueryManager
 
 DEFAULT_NAMESPACE: str = 'r_'
 """ The default namespace used for the Reflective core in the object dictionary. """
@@ -60,6 +61,11 @@ class RContext(object):
         relative to the root Reflective instance, or None if this context is for the root instance."""
         return self._path
 
+    @property
+    def is_root(self) -> bool:
+        """Returns whether this context is for the root Reflective instance."""
+        return self._root is None
+
     def __init__(self, ref: any, root: 'Reflective' = None, path: str = None):
         self._cache = {}
         self._ref = ref
@@ -69,6 +75,9 @@ class RContext(object):
 
 class RCore:
     """ A class that provides the internal core functionality for Reflective instances. """
+
+    _instance: 'Reflective'
+    """ A reference to the Reflective instance for this RCore object. """
 
     _ref_pattern = re.compile(r'\$(r|e){([a-z0-9_/.]+)}', re.IGNORECASE)
     """ The regular expression pattern used to match variable references in values. """
@@ -85,8 +94,16 @@ class RCore:
     _config: dict = {}
     """ A reference to the ReflectiveConfig object for this Reflective instance. """
 
+    _query_manager: QueryManager
+    """ A reference to the QueryManager object for this Reflective instance. """
+
     _valid: bool = True
     """ Tracks whether this instance is a valid representation of the underlying data. """
+
+    @property
+    def instance(self) -> 'Reflective':
+        """Returns a reference to the Reflective instance for this RCore object."""
+        return self._instance
 
     @property
     def context(self) -> RContext or None:
@@ -97,6 +114,11 @@ class RCore:
     def config(self) -> dict:
         """Returns the ReflectiveConfig object for this Reflective instance."""
         return self._config
+
+    @property
+    def qm(self) -> QueryManager:
+        """Returns the QueryManager object for this Reflective instance."""
+        return self._query_manager
 
     @property
     def cache(self) -> dict:
@@ -113,9 +135,9 @@ class RCore:
         """Returns the root Reflective instance of the object."""
         if 'root' in self.cache:
             return self.cache['root']
-        ref = self
-        while ref.context.root:
-            ref = ref.context.root
+        ref = self._instance
+        while ref().context.root:
+            ref = ref().context.root
         self.cache['root'] = ref
         return ref
 
@@ -137,7 +159,9 @@ class RCore:
         """Returns the cache key (as a hash of the path key), for the current configuration reference,
         relative to the root object."""
         if 'cache_key' not in self.context.cache:
-            self.context.cache['cache_key'] = hash(self.context.path)
+            import hashlib
+            import json
+            self.context.cache['cache_key'] = hashlib.md5(json.dumps(self.context.path).encode('utf-8')).hexdigest()
         return self.context.cache['cache_key']
 
     @property
@@ -183,9 +207,11 @@ class RCore:
         """ Returns the YAML representation of the reference value. """
         return self.to_yaml()
 
-    def __init__(self, context: RContext, config: dict = None):
+    def __init__(self, instance: 'Reflective', context: RContext, config: dict = None):
+        self._instance = instance
         self._context = context
         self._config = config
+        self._query_manager = QueryManager(self._instance)
 
     def to_json(self, ref: any = None, flat: bool = True) -> str:
         """ Returns the JSON representation of the given reference, with the option to format the output. """
@@ -234,7 +260,7 @@ class RCore:
             # Change to the root context if the query starts with the delimiter.
             if query.startswith(self.delimiter):
                 query = query[1:]
-                ref = self.root.context.ref
+                ref = self.root().context.ref
                 path = query
 
             # Split the query into segments.
@@ -242,7 +268,7 @@ class RCore:
 
             try:
                 # Reduce the reference based on the query segments.
-                ref = reduce(RCore._util_get_item, segments, ref)
+                ref = reduce(RCore.util_get_item, segments, ref)
 
                 # Create and return a new Reflective instance of the appropriate type based on the reduced reference.
                 return Reflective(RContext(
@@ -309,7 +335,7 @@ class RCore:
             if method == 'r':
                 # The Reflective query string
                 query = match[1]
-                query_value = self.root.query(query, default)
+                query_value = self.root().query(query, default)
                 query_pattern = f'${match[0]}{{{query}}}'
 
                 # Provide typed references when sole references are found
@@ -438,7 +464,7 @@ class RCore:
         return str(value)
 
     @staticmethod
-    def _util_get_item(c, k) -> any:
+    def util_get_item(c, k) -> any:
         """ Reduces the given reference based on the given key, safely handling numerical index references. """
         if isinstance(k, int) or str(k).isnumeric():
             return c[int(k)]
@@ -468,7 +494,7 @@ class Reflective:
         # Allow instances of the Reflective to be passed in as the ref argument.
         if isinstance(ref, Reflective):
             ref_ns = ref.__dict__[NAMESPACE_KEY]
-            self.__dict__[namespace] = RCore(ref.__dict__[ref_ns])
+            self.__dict__[namespace] = RCore(self, ref.__dict__[ref_ns])
             return
 
         # Allow instances of the RCore to be passed in as the ref argument.
@@ -478,11 +504,11 @@ class Reflective:
 
         # Allow instances of the ReflectiveContext to be passed in as the ref argument.
         if isinstance(ref, RContext):
-            self.__dict__[namespace] = RCore(ref)
+            self.__dict__[namespace] = RCore(self, ref)
             return
 
         # Handle direct references to data values.
-        self.__dict__[namespace] = RCore(RContext(ref))
+        self.__dict__[namespace] = RCore(self, RContext(ref))
 
     def __enter__(self) -> 'Reflective':
         """ Returns a new Reflective instance of the appropriate type, using the current instance context. """
