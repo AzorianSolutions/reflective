@@ -13,6 +13,10 @@ truth for planned and completed milestones.
 - [x] Provide support for updating data using object, dictionary, and list syntax.
 - [x] Provide support for dynamic references with pass-through data typing.
 
+### Version 0.1.1
+
+- [x] Provide support for deleting data using object, dictionary, and list syntax.
+
 ### Version 0.2.0
 
 - [ ] Provide support for updating data by path.
