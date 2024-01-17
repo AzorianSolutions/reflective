@@ -62,7 +62,7 @@ the [Feature Documentation](./docs/wiki/project/features.md).
 
 ## Installation
 
-**Notice! This requires Python 3.6+**
+**Notice! This requires Python 3.8+**
 
 To install the Python package, run the following command in your Python environment:
 
