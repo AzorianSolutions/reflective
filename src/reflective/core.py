@@ -264,10 +264,10 @@ class RCore:
 
         return self.cache[cache_key]
 
-    def extract(self, value: str) -> list[str]:
+    def extract(self, value: str) -> list:
         """ Extracts the Reflective reference strings from the given string and returns them as a list of strings."""
 
-        references: list[str] = []
+        references: list = []
 
         # Process $(r|e){...} references
         matches = self._ref_pattern.findall(value)
