@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-test-publish-index-package:
-    name: PyPi Package Test/Build/Publish
+  test-build-publish-package:
+    name: Test, Build, & Publish Python Package
     runs-on: ubuntu-20.04
     permissions:
       id-token: write
@@ -13,7 +13,7 @@ jobs:
 
     steps:
       # Checkout the repository
-      - name: Repository Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       # Set up the environment to run Python
@@ -23,7 +23,7 @@ jobs:
           python-version: '3.8'
 
       # Set up the environment to run the latest Python build, test, and publish tools
-      - name: Set Up Build & Test Environment
+      - name: Set Up Environment
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install --upgrade setuptools
@@ -34,7 +34,7 @@ jobs:
       # Install the package from source
       - name: Install Source Code
         run: |
-          python3 -m pip install -e .
+          python3 -m pip install .
 
       # Run the package tests
       - name: Test Source Code
@@ -48,15 +48,15 @@ jobs:
           python3 -m build
 
       # Check the distribution files with Twine
-      - name: Test Package
+      - name: Check Package
         run: |
           python3 -m twine check dist/*
 
       # Store the distribution files as artifacts
-      - name: Store Distribution Packages
+      - name: Upload Package
         uses: actions/upload-artifact@v3
         with:
-          name: python-package-distributions
+          name: python-package
           path: dist/
 
       # Upload the distribution artifacts to PyPi production environment
