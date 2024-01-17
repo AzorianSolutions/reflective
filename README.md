@@ -7,11 +7,11 @@ and many features are not currently present.
 
 ## Branch Status
 
-| Branch  | CodeQL                                                                                                                                                                                                                 | Build                                                                                                                                                                                                           |
-|---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `main`  | [![CodeQL](https://github.com/AzorianSolutions/reflective/actions/workflows/codeql-analysis.yml/badge.svg?branch=main)](https://github.com/AzorianSolutions/reflective/actions/workflows/codeql-analysis.yml)          | [![Build](https://github.com/AzorianSolutions/reflective/actions/workflows/project-test.yml/badge.svg?branch=main)](https://github.com/AzorianSolutions/reflective/actions/workflows/project-test.yml)          |
-| `dev`   | [![CodeQL](https://github.com/AzorianSolutions/reflective/actions/workflows/codeql-analysis.yml/badge.svg?branch=dev)](https://github.com/AzorianSolutions/reflective/actions/workflows/codeql-analysis.yml)           | [![Build](https://github.com/AzorianSolutions/reflective/actions/workflows/project-test.yml/badge.svg?branch=dev)](https://github.com/AzorianSolutions/reflective/actions/workflows/project-test.yml)           |
-| `0.1.0` | [![CodeQL](https://github.com/AzorianSolutions/reflective/actions/workflows/codeql-analysis.yml/badge.svg?branch=release/0.1.0)](https://github.com/AzorianSolutions/reflective/actions/workflows/codeql-analysis.yml) | [![Build](https://github.com/AzorianSolutions/reflective/actions/workflows/project-test.yml/badge.svg?branch=release/0.1.0)](https://github.com/AzorianSolutions/reflective/actions/workflows/project-test.yml) |
+| Branch  | CodeQL                                                                                                                                                                                                                 | Build                                                                                                                                                                                             |
+|---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `main`  | [![CodeQL](https://github.com/AzorianSolutions/reflective/actions/workflows/codeql-analysis.yml/badge.svg?branch=main)](https://github.com/AzorianSolutions/reflective/actions/workflows/codeql-analysis.yml)          | [![Build](https://github.com/AzorianSolutions/reflective/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/AzorianSolutions/reflective/actions/workflows/build.yml)          |
+| `dev`   | [![CodeQL](https://github.com/AzorianSolutions/reflective/actions/workflows/codeql-analysis.yml/badge.svg?branch=dev)](https://github.com/AzorianSolutions/reflective/actions/workflows/codeql-analysis.yml)           | [![Build](https://github.com/AzorianSolutions/reflective/actions/workflows/build.yml/badge.svg?branch=dev)](https://github.com/AzorianSolutions/reflective/actions/workflows/build.yml)           |
+| `0.1.0` | [![CodeQL](https://github.com/AzorianSolutions/reflective/actions/workflows/codeql-analysis.yml/badge.svg?branch=release/0.1.0)](https://github.com/AzorianSolutions/reflective/actions/workflows/codeql-analysis.yml) | [![Build](https://github.com/AzorianSolutions/reflective/actions/workflows/build.yml/badge.svg?branch=release/0.1.0)](https://github.com/AzorianSolutions/reflective/actions/workflows/build.yml) |
 
 ## Table of Contents
 
@@ -62,7 +62,7 @@ the [Feature Documentation](./docs/wiki/project/features.md).
 
 ## Installation
 
-**Notice! This requires Python 3.6+**
+**Notice! This requires Python 3.8+**
 
 To install the Python package, run the following command in your Python environment:
 
