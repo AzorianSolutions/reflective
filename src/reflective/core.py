@@ -1,4 +1,5 @@
 import re
+from typing import Union
 
 DEFAULT_NAMESPACE: str = 'r_'
 """ The default namespace used for the Reflective core in the object dictionary. """
@@ -564,6 +565,17 @@ class Reflective:
             cache_core.context.ref = value
 
     def __delattr__(self, key: str) -> None:
+        self().enforce_validation()
+
+        # Invalidate the reference value for existing cached instances.
+        cache_key = self().cache_key_plus(key)
+
+        if cache_key in self().cache:
+            cache_item = self().cache[cache_key]
+            cache_core = cache_item.__dict__[cache_item.__dict__[NAMESPACE_KEY]]
+            cache_core.invalidate()
+            del self().cache[cache_key]
+
         del self().context.ref[key]
 
     def __getitem__(self, item: str or int or slice) -> 'Reflective':
@@ -647,6 +659,26 @@ class Reflective:
 
             # Update the invalidated cache item either way to ensure its reference is up-to-date.
             cache_core.context.ref = value
+
+    def __delitem__(self, item: Union[str, int, slice]) -> None:
+        self().enforce_validation()
+
+        item_type = type(item)
+        cache_item = item
+
+        if item_type is slice:
+            cache_item = f'{item.start}:{item.stop}:{item.step}'
+
+        # Invalidate the reference value for existing cached instances.
+        cache_key = self().cache_key_plus(cache_item)
+
+        if cache_key in self().cache:
+            cache_item = self().cache[cache_key]
+            cache_core = cache_item.__dict__[cache_item.__dict__[NAMESPACE_KEY]]
+            cache_core.invalidate()
+            del self().cache[cache_key]
+
+        del self().context.ref[item]
 
     def __repr__(self) -> str:
         self().enforce_validation()
