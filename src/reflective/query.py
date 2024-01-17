@@ -93,7 +93,7 @@ class Query:
                     continue
 
                 # Convert slice references to slice objects
-                slice_match = re.fullmatch(r'^(\-?[0-9])?\:(\-?[0-9])?(?:\:(\-?[0-9])?)?$', component)
+                slice_match = re.fullmatch(r'^(\-?[0-9]+)?\:(\-?[0-9]+)?(?:\:(\-?[0-9]+)?)?$', component)
 
                 if slice_match is not None:
                     start = slice_match.group(1)
