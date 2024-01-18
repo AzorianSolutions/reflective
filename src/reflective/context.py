@@ -78,16 +78,10 @@ class ContextManager:
         """ Returns the delimiter used to join path components into paths. """
         return self._delimiter
 
-    def __init__(self, core: 'RCore' = None, root: any = None, path: list = None, delimiter: Union[str, None] = None):
-        """ Initializes a new ContextManager object associated with the given core. """
-        self._core = core
-        self._root = root
-        self._path = list(path) if path is not None else []
-        self._delimiter = delimiter if delimiter is not None else DEFAULT_DELIMITER
-
-    def __hash__(self) -> str:
-        """ Builds a hash for this context instance based on the context path. """
-        from reflective.tcore import RCore
+    @property
+    def cache_key(self) -> str:
+        """ Builds a cache key for this context instance based on the context path. """
+        from reflective.core import RCore
 
         # Build the hash source value from path components
         source = self.delimiter.join(str(c) for c in self.path)
@@ -95,23 +89,40 @@ class ContextManager:
         # Generate the hash
         return RCore.hash_value(source)
 
+    def __init__(self, core: 'RCore' = None, root: any = None, path: list = None, delimiter: Union[str, None] = None):
+        """ Initializes a new ContextManager object associated with the given core. """
+        self._core = core
+        self._root = root
+        self._path = list(path) if path is not None else []
+        self._delimiter = delimiter if delimiter is not None else DEFAULT_DELIMITER
+
     def get(self, path: list) -> 'Reflective':
         """ Returns a Reflective instance for the given path. """
-        from reflective.tcore import RCore
+        from reflective.core import RCore
         from reflective.types import Reflective
 
         full_path = self.path + path
         path_key: str = self.delimiter.join(str(c) for c in full_path)
-        cache_key: str = self.core.hash_value(path_key)
+        cache_key: str = RCore.hash_value(path_key)
 
         # Check if the path is already cached
-        if cache_key in self.core.cache:
-            print(f'CACHE HIT: {path}')
-            return self.core.cache[cache_key]
+        if cache_key in self.cache:
+            return self.cache[cache_key]
 
         # Create a new instance and cache a reference to it
         cm = ContextManager(root=self.root, path=full_path)
-        core = RCore(context=cm, root=self.core.root, delimiter=self.delimiter)
-        self.core.cache[cache_key] = Reflective(core)
+        cm.core = RCore(context=cm, root=self.core.root, delimiter=self.delimiter)
+        self.cache[cache_key] = Reflective(cm.core)
 
-        return self.core.cache[cache_key]
+        return self.cache[cache_key]
+
+    def delete(self, path: list = None) -> None:
+        """ Deletes the value at the given path, relative to this context. """
+        from functools import reduce
+        path = self.path + path if isinstance(path, list) else self.path
+        reduce(lambda c, k: c[k], path[:-1], self.root).pop(path[-1])
+        parent_path = path[:-1]
+        parent_core = self.get(path[:-1])() if len(parent_path) else self.core.root()
+        cache_key = self.cache_key
+        if cache_key in parent_core.cache:
+            del parent_core.cache[cache_key]

@@ -9,10 +9,10 @@ class RDict(RComposite, UserDict, dict):
         value = RUtil.get_reference(ref)
         self.__dict__['data'] = value
         super().__init__(ref)
-        if value is not None:
-            self.update(value)
-        if kwargs:
-            self.update(kwargs)
+        # if value is not None:
+        #     self.update(value)
+        # if kwargs:
+        #     self.update(kwargs)
 
     def __iter__(self):
         return iter(self.__dict__['data'])

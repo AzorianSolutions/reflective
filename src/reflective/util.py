@@ -9,7 +9,7 @@ class RUtil:
 
     @staticmethod
     def get_reference(value: any):
-        from reflective.tcore import RCore
+        from reflective.core import RCore
         from reflective.context import ContextManager
         from reflective.types import Reflective
 
@@ -26,7 +26,7 @@ class RUtil:
 
     @staticmethod
     def update_reference(ref: any, value: any):
-        from reflective.tcore import RCore
+        from reflective.core import RCore
         from reflective.context import ContextManager
         from reflective.types import Reflective
 

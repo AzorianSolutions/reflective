@@ -1,5 +1,5 @@
 from typing import Union
-from reflective.tcore import RCore
+from reflective.core import RCore
 from reflective.query import QueryResult
 
 DEFAULT_NAMESPACE: str = 'r_'
@@ -28,7 +28,7 @@ class Reflective:
 
     def __init__(self, ref: any, namespace: Union[str, None] = None):
         """ Initializes a new Reflective instance of the appropriate type, using the given reference as the value. """
-        from reflective.tcore import RCore
+        from reflective.core import RCore
         from reflective.context import ContextManager
 
         if namespace is None:
@@ -55,23 +55,81 @@ class Reflective:
         self.__dict__[namespace] = inst
 
     def __call__(self, *args, **kwargs) -> Union[RCore, 'Reflective', QueryResult, any]:
+        from reflective.query import Query
+
         namespace = self.__dict__[NAMESPACE_KEY]
         core = self.__dict__[namespace]
+        total_args = len(args)
 
         # Return the reference to the RCore instance if no arguments are passed in.
-        if not len(args):
+        if not total_args:
             return core
 
+        query = args[0]
+
         # Return the underlying value reference if a single empty string is passed in.
-        if len(args) == 1 and str(args[0]).strip() == '':
+        if total_args == 1 and str(query).strip() == '':
             return core.context.ref
 
-        qr: QueryResult = core.query(args[0])
+        query = Query(query)
+        qr: QueryResult = core.query(query)
 
-        if len(qr) == 1:
-            return qr[0]
+        # Handle query only scenarios
+        if total_args == 1:
+            if len(qr) == 1:
+                return qr[0]
+            return qr
 
+        # Handle query update scenarios
+        value = args[1]
+
+        for result in qr:
+            result().context.raw = value
+
+        # If the references to be set don't already exist, create them in the parent
+        if not len(qr):
+            parent = core.context.get(query.path[:-1])
+            parent().context.raw[query.path[-1]] = value
+
+        return None
+
+    def __getattr__(self, item):
+        qr = self(item)
+        if isinstance(qr, Reflective):
+            return qr
+        if not len(qr):
+            raise AttributeError(f'<{self.__class__.__name__}> The attribute "{item}" does not exist.')
         return qr
+
+    def __setattr__(self, key, value):
+        self(key, value)
+
+    def __delattr__(self, item):
+        qr = self(item)
+        if isinstance(qr, Reflective):
+            qr().context.delete()
+            return
+        for result in self(item):
+            result().context.delete()
+
+    def __getitem__(self, item):
+        return self(item)
+
+    def __setitem__(self, item, value):
+        # Pass-through assignments for internal storage
+        if item == NAMESPACE_KEY or (NAMESPACE_KEY in self.__dict__ and item == self.__dict__[NAMESPACE_KEY]):
+            self.__dict__[item] = value
+            return
+
+        self(item, value)
+
+    def __delitem__(self, item):
+        qr = self(item)
+        if isinstance(qr, Reflective):
+            qr().context.delete()
+            return
+        for result in self(item):
+            result().context.delete()
 
     def __enter__(self) -> 'Reflective':
         """ Returns a reference to the RCore instance bound to this Reflective instance. """

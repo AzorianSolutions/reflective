@@ -44,7 +44,7 @@ class RList(RComposite, UserList, list):
     def __radd__(self, other):
         if isinstance(other, UserList):
             return self.__class__(other.data + self.__dict__['data'])
-        elif isinstance(other, type(self.__dict__['data'])):
+        elif isinstance(other, list):
             return self.__class__(other + self.__dict__['data'])
         return self.__class__(list(other) + self.__dict__['data'])
 
@@ -100,7 +100,7 @@ class RList(RComposite, UserList, list):
     def reverse(self):
         self.__dict__['data'].reverse()
 
-    def sort(self, /, *args, **kwds):
+    def sort(self, *args, **kwds):
         self.__dict__['data'].sort(*args, **kwds)
 
     def extend(self, other):

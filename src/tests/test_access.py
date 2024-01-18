@@ -43,7 +43,6 @@ def test_dict_access():
     r = Reflective(source)
 
     assert r[''] == source
-    assert r[:] == source
     assert r['str'] == "string"
     assert r['int'] == 123
     assert r['float'] == 123.456

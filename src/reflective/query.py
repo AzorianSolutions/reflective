@@ -192,23 +192,25 @@ class QueryManager:
                 return self.cache[cache_key]
 
         results: list = []
-        path = self.context.path + query.path
         ref: Union['Reflective', None] = None
         found: bool = True
+        path = query.path
+        root = self.context.ref if query.is_relative else self.context.root
+        context = self.context if query.is_relative else self.core.root().context
 
         try:
             # Reduce the reference based on the query path components.
-            ref = reduce(lambda c, k: c[k], path, self.context.root)
+            ref = reduce(lambda c, k: c[k], path, root)
         except (KeyError, TypeError):
             # Could not find a matching reference
             found = False
 
-        if found and ref is not None:
+        if found:
             if type(path[-1]) is slice and isinstance(ref, list):
                 for item in ref:
                     results.append(item)
             else:
-                results.append(self.context.get(path))
+                results.append(context.get(path))
 
         self.cache[cache_key] = QueryResult(query, results)
 
@@ -216,14 +218,12 @@ class QueryManager:
 
     def build_cache_key(self, query: Union[str, int, slice, Query]) -> str:
         """ Builds a cache key for the given query. """
-        import hashlib
-        import json
 
         # Convert the query to a Query object if it isn't already
         if type(query) is not Query:
             query = Query(query)
 
-        path = query.path.copy() if query.is_relative else self.core.path_list + query.path
+        path = query.path.copy() if query.is_relative else self.context.path + query.path
 
         for i, component in enumerate(path):
             if type(component) is slice:
@@ -233,9 +233,6 @@ class QueryManager:
                 path[i] = f'{start}:{stop}:{step}'
 
         # Build the cache key base
-        cache_key = query.delimiter.join(str(c) for c in path)
+        source = self.delimiter.join(str(c) for c in path)
 
-        # Generate the cache key
-        cache_key = hashlib.md5(json.dumps(cache_key).encode('utf-8')).hexdigest()
-
-        return cache_key
+        return self.core.hash_value(source)

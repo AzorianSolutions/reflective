@@ -6,10 +6,10 @@ from reflective.types.base import RSimple
 class RString(RSimple, UserString, str):
 
     def __init__(self, ref: str):
-        from reflective.core import RCore
-        value = RCore.get_reference(ref)
-        value = RCore.get_string_value(value)
-        RCore.update_reference(ref, value)
+        from reflective.util import RUtil
+        value = RUtil.get_reference(ref)
+        value = RUtil.get_string_value(value)
+        RUtil.update_reference(ref, value)
         self.__dict__['data'] = value
         super().__init__(ref)
 

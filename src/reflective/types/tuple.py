@@ -5,4 +5,5 @@ from reflective.types.base import RComposite
 class RTuple(RComposite, tuple):
 
     def __new__(cls, ref: any):
-        return tuple.__new__(cls, RCore.get_reference(ref))
+        from reflective.util import RUtil
+        return tuple.__new__(cls, RUtil.get_reference(ref))
