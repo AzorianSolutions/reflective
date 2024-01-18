@@ -5,8 +5,8 @@ from reflective.types.base import RComposite
 class RDict(RComposite, UserDict, dict):
 
     def __init__(self, ref: any = None, **kwargs):
-        from reflective.core import RCore
-        value = RCore.get_reference(ref)
+        from reflective.util import RUtil
+        value = RUtil.get_reference(ref)
         self.__dict__['data'] = value
         super().__init__(ref)
         if value is not None:

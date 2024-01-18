@@ -1,5 +1,5 @@
-from reflective.core import Reflective
 from reflective.types import (
+    Reflective,
     RType,
     RComposite,
     RSimple,

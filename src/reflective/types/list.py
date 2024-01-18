@@ -5,11 +5,11 @@ from reflective.types.base import RComposite
 class RList(RComposite, UserList, list):
 
     def __init__(self, ref: any):
-        from reflective.core import RCore
-        value = RCore.get_reference(ref)
+        from reflective.util import RUtil
+        value = RUtil.get_reference(ref)
         if value is not None:
-            value = RCore.get_list_value(value)
-            RCore.update_reference(ref, value)
+            value = RUtil.get_list_value(value)
+            RUtil.update_reference(ref, value)
         self.__dict__['data'] = value
         super().__init__(ref)
 

@@ -2,7 +2,8 @@ from __future__ import annotations
 from collections import UserList
 from typing import Union
 
-DEFAULT_DELIMITER = '/'
+DEFAULT_DELIMITER: str = '/'
+""" The default separator used to join path components into paths. """
 
 
 class Query:
@@ -13,6 +14,9 @@ class Query:
 
     _query_type: type
     """ The type of the raw query value. """
+
+    _query_length: int
+    """ The total number of path components in the query. """
 
     _delimiter: str
     """ The delimiter used to separate query path components. """
@@ -70,6 +74,7 @@ class Query:
         if self._query_type in [slice, int]:
             self._is_relative = True
             self._path.append(self._query)
+            self._query_length = 1
 
         if self._query_type is str:
             self._query = self._query.strip()
@@ -136,28 +141,42 @@ class QueryResult(UserList):
 class QueryManager:
     """ This class provides an interface for executing queries on Reflective instances. """
 
-    _reflective: 'Reflective'
-    """ The Reflective instance that the QueryManager is bound to. """
+    _core: 'RCore'
+    """ The parent RCore instance of this instance. """
 
-    @property
-    def reflective(self) -> 'Reflective':
-        """ Returns the Reflective instance that the QueryManager is bound to. """
-        return self._reflective
+    _delimiter: str
+    """ The delimiter used to join path components into paths. """
 
     @property
     def core(self) -> 'RCore':
-        """ Returns the RCore instance that the QueryManager is bound to. """
-        return self._reflective()
+        """ Returns the parent RCore instance of this instance. """
+        return self._core
 
-    def __init__(self, reflective: 'Reflective'):
-        """ Initializes a new QueryManager object. """
-        self._reflective = reflective
+    @property
+    def cache(self) -> 'CacheManager':
+        """ Returns the cache manager instance associated with the parent RCore instance. """
+        return self.core.cache
+
+    @property
+    def context(self) -> 'ContextManager':
+        """ Returns the context manager instance associated with the parent RCore instance. """
+        return self.core.context
+
+    @property
+    def delimiter(self) -> str:
+        """ Returns the delimiter used to join path components into paths. """
+        return self._delimiter
+
+    def __init__(self, core: 'RCore', delimiter: Union[str, None] = None):
+        """ Initializes a new QueryManager object associated with the given core. """
+        self._core = core
+        self._delimiter = delimiter if delimiter is not None else DEFAULT_DELIMITER
 
     def __call__(self, query: Union[str, int, slice, Query]) -> QueryResult:
         """ Executes a query on the bound Reflective instance. """
         return self.query(query)
 
-    def query(self, query: Union[str, int, slice, Query], use_cache: bool = False) -> QueryResult:
+    def query(self, query: Union[str, int, slice, Query], use_cache: bool = True) -> QueryResult:
         """ Executes a query on the bound Reflective instance. """
         from functools import reduce
 
@@ -167,19 +186,19 @@ class QueryManager:
 
         cache_key = self.build_cache_key(query)
 
-        # If caching is enabled, check if the query is already cached
-        if use_cache:
-            if cache_key in self.core.cache:
-                return self.core.cache[cache_key]
+        # If caching is enabled, check if the query is already cached assuming it doesn't end with a slice type
+        if use_cache and not type(query.path[-1]) is slice:
+            if cache_key in self.cache:
+                return self.cache[cache_key]
 
         results: list = []
-        path = self.core.path_list + query.path
+        path = self.context.path + query.path
         ref: Union['Reflective', None] = None
         found: bool = True
 
         try:
             # Reduce the reference based on the query path components.
-            ref = reduce(lambda c, k: c[k], path, self._reflective().root)
+            ref = reduce(lambda c, k: c[k], path, self.context.root)
         except (KeyError, TypeError):
             # Could not find a matching reference
             found = False
@@ -189,11 +208,11 @@ class QueryManager:
                 for item in ref:
                     results.append(item)
             else:
-                results.append(ref)
+                results.append(self.context.get(path))
 
-        self.core.cache[cache_key] = QueryResult(query, results)
+        self.cache[cache_key] = QueryResult(query, results)
 
-        return self.core.cache[cache_key]
+        return self.cache[cache_key]
 
     def build_cache_key(self, query: Union[str, int, slice, Query]) -> str:
         """ Builds a cache key for the given query. """
@@ -214,7 +233,7 @@ class QueryManager:
                 path[i] = f'{start}:{stop}:{step}'
 
         # Build the cache key base
-        cache_key = query.delimiter.join(path)
+        cache_key = query.delimiter.join(str(c) for c in path)
 
         # Generate the cache key
         cache_key = hashlib.md5(json.dumps(cache_key).encode('utf-8')).hexdigest()

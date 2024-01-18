@@ -1,6 +1,6 @@
 import re
 from typing import Union
-from reflective.query import QueryManager
+from reflective.query import QueryResult, QueryManager
 
 DEFAULT_NAMESPACE: str = 'r_'
 """ The default namespace used for the Reflective core in the object dictionary. """
@@ -518,7 +518,7 @@ class Reflective:
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
-    def __call__(self, *args, **kwargs) -> any:
+    def __call__(self, *args, **kwargs) -> Union['Reflective', 'RCore', QueryResult, any]:
         namespace = self.__dict__[NAMESPACE_KEY]
         core = self.__dict__[namespace]
         core.enforce_validation()
@@ -531,15 +531,18 @@ class Reflective:
         if len(args) == 1 and str(args[0]).strip() == '':
             return core.context.ref
 
-        query = args[0]
-        default = args[1] if len(args) > 1 else None
+        qr: QueryResult = core.qm(args[0])
 
-        return core.query(query, default)
+        if len(qr) == 1:
+            return qr[0]
+
+        return qr
 
     def __getattr__(self, key: str) -> 'Reflective':
         from reflective.types import RString
 
         self().enforce_validation()
+
         cache_key = self().cache_key_plus(key)
 
         # Handle scenarios where the item is already cached.
@@ -565,7 +568,7 @@ class Reflective:
 
         raise AttributeError(f'<{self.__class__.__name__}> Attribute "{key}" does not exist.')
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, key, value) -> None:
         self().enforce_validation()
 
         # Update the underlying value reference.
@@ -604,7 +607,7 @@ class Reflective:
 
         del self().context.ref[key]
 
-    def __getitem__(self, item: str or int or slice) -> 'Reflective':
+    def __getitem__(self, item: str or int or slice) -> Union['Reflective', QueryResult]:
         from reflective.types import RString
 
         self().enforce_validation()
@@ -656,7 +659,7 @@ class Reflective:
 
         return self().cache[cache_key]
 
-    def __setitem__(self, item, value):
+    def __setitem__(self, item, value) -> None:
         # Pass-through assignments for internal storage
         if item == NAMESPACE_KEY or (NAMESPACE_KEY in self.__dict__ and item == self.__dict__[NAMESPACE_KEY]):
             self.__dict__[item] = value
