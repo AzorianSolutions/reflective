@@ -58,8 +58,7 @@ class ContextManager:
     @property
     def ref(self) -> any:
         """ Returns a reference to the parsed value of this context. """
-        # TODO: Implement value parsing call
-        return self.raw
+        return self.parse(self.raw)
 
     @property
     def raw(self) -> any:
@@ -71,7 +70,18 @@ class ContextManager:
     def raw(self, value: any) -> None:
         """ Sets the unparsed value of this context. """
         from functools import reduce
-        reduce(lambda c, k: c[k], self.path[:-1], self.root)[self.path[-1]] = value
+        if len(self.path):
+            parent = reduce(lambda c, k: c[k], self.path[:-1], self.root)
+            original_type = type(parent[self.path[-1]])
+            parent[self.path[-1]] = value
+        else:
+            original_type = type(self.root)
+            self.root = value
+
+        # Check if the parsed value type is different then the previous, and invalidate existing cached instance if so
+        if type(self.ref) is not original_type and self.cache_key in self.cache:
+            self.cache[self.cache_key]().invalidate()
+            del self.cache[self.cache_key]
 
     @property
     def delimiter(self) -> str:
@@ -96,8 +106,8 @@ class ContextManager:
         self._path = list(path) if path is not None else []
         self._delimiter = delimiter if delimiter is not None else DEFAULT_DELIMITER
 
-    def get(self, path: list, use_cache: bool = False) -> 'Reflective':
-        """ Returns a Reflective instance for the given path. """
+    def get(self, path: list) -> 'Reflective':
+        """ Returns a singular Reflective instance for the given path, relative to this context. """
         from reflective.core import RCore
         from reflective.types import Reflective
 
@@ -106,7 +116,7 @@ class ContextManager:
         cache_key: str = RCore.hash_value(path_key)
 
         # Check if the path is already cached
-        if use_cache and cache_key in self.cache:
+        if cache_key in self.cache:
             return self.cache[cache_key]
 
         # Create a new instance and cache a reference to it
@@ -126,3 +136,51 @@ class ContextManager:
         cache_key = self.cache_key
         if cache_key in parent_core.cache:
             del parent_core.cache[cache_key]
+
+    def parse(self, value: any, default: any = None) -> any:
+        """ Parses the given value for Reflective references, updating the references with values from the root context,
+        and returning the updated value reference. """
+        import os
+        from reflective.util import RUtil
+
+        if isinstance(value, dict):
+            return {k: self.parse(v, default) for k, v in value.copy().items()}
+
+        elif isinstance(value, list):
+            return [self.parse(item, default) for item in value.copy()]
+
+        elif isinstance(value, tuple):
+            return tuple([self.parse(item, default) for item in value])
+
+        if not isinstance(value, str):
+            return value
+
+        # Process $(r|e){...} references
+        matches = RUtil.ref_pattern.findall(value)
+
+        for match in matches:
+            # The part that comes after the "$" and before the "{"
+            method = str(match[0]).lower()
+
+            # Handles instances of $(r){...} references
+            if method == 'r':
+                from reflective.query import QueryResult
+                from reflective.types import Reflective
+                from reflective.util import RUtil
+
+                # The Reflective query string
+                query = match[1]
+
+                qr = self.core.root().query(query)
+
+                if isinstance(qr, QueryResult) and len(qr) or isinstance(qr, Reflective):
+                    value = RUtil.update(value, query, qr)
+
+            # Handles instances of $(e){...} references
+            elif method == 'e':
+                # The environment variable name
+                query = match[1]
+                query_value = os.getenv(query)
+                value = value.replace(f'${match[0]}{{{query}}}', str(query_value))
+
+        return value

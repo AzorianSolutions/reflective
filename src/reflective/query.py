@@ -199,27 +199,32 @@ class QueryManager:
         results: list = []
         ref: Union['Reflective', None] = None
         found: bool = True
-        path = query.path
-        root = self.context.raw if query.is_relative else self.context.root
-        context = self.context if query.is_relative else self.core.root().context
+        context = self.core.root().context
+        root = context.raw
+
+        if len(self.core.path):
+            root = reduce(lambda c, k: c[k], self.core.path, root)
 
         try:
             # Reduce the reference based on the query path components.
-            ref = reduce(lambda c, k: c[k], path, root)
+            ref = reduce(lambda c, k: c[k], query.path, root)
         except (KeyError, TypeError):
             # Could not find a matching reference
             found = False
 
         if found:
-            if type(path[-1]) is slice and isinstance(ref, list):
+            if type(query.path[-1]) is slice and isinstance(ref, list):
                 for item in ref:
                     results.append(item)
             else:
-                results.append(context.get(path))
+                lookup = context.get(self.core.path + query.path)
+                results.append(lookup)
 
-        self.cache[cache_key] = QueryResult(query, results)
+        if use_cache:
+            self.cache[cache_key] = QueryResult(query, results)
+            return self.cache[cache_key]
 
-        return self.cache[cache_key]
+        return QueryResult(query, results)
 
     def build_cache_key(self, query: Union[str, int, slice, Query]) -> str:
         """ Builds a cache key for the given query. """

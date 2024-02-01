@@ -26,6 +26,9 @@ class RCore:
     _delimiter: str
     """ The delimiter used to join path components into paths. """
 
+    _invalid: bool
+    """ A flag to indicate whether the instance is invalid. """
+
     @property
     def instance(self) -> 'Reflective':
         """ Returns the Reflective instance that this RCore instance is associated with. """
@@ -105,9 +108,10 @@ class RCore:
         self._context = context
         self._root = root if root is not None else instance
         self._delimiter = delimiter if delimiter is not None else DEFAULT_DELIMITER
+        self._invalid = False
 
         # Initialize the other managers that aren't provided through instantiation.
-        self._cache = CacheManager(self)
+        self._cache = CacheManager(self) if root is None else root().cache
         self._query = QueryManager(self, delimiter)
 
     def to_json(self, ref: any = None, flat: bool = True) -> str:
@@ -119,6 +123,16 @@ class RCore:
         """ Returns the YAML representation of the given reference. """
         import yaml
         return yaml.dump(ref or self.ref, indent=4)
+
+    def invalidate(self) -> None:
+        """ Invalidates the instance. """
+        self._invalid = True
+
+    def enforce_validation(self) -> None:
+        """ Enforces validation of the instance. """
+        from reflective.exceptions import RInvalidReference
+        if self._invalid:
+            raise RInvalidReference('This reference is now invalid due to a value type change in the parsed value.')
 
     @staticmethod
     def hash_value(value: str) -> str:

@@ -61,6 +61,9 @@ class Reflective:
         core = self.__dict__[namespace]
         total_args = len(args)
 
+        # Ensure that this reference is valid
+        core.enforce_validation()
+
         # Return the reference to the RCore instance if no arguments are passed in.
         if not total_args:
             return core
@@ -83,17 +86,31 @@ class Reflective:
         # Handle query update scenarios
         value = args[1]
 
-        for result in qr:
-            result().context.raw = value
+        if len(qr):
+            for result in qr:
+                result().context.raw = value
+            return True
 
-        # If the references to be set don't already exist, create them in the parent
-        if not len(qr):
-            parent = core.context.get(query.path[:-1])
-            parent().context.raw[query.path[-1]] = value
+        # If the references to be set don't already exist, create them in the parent context
+        else:
+            parent_path = core.path + query.path[:-1]
+            key = query.path[-1]
+
+            # Handle non-root paths
+            if len(parent_path):
+                parent = core.root().context.get(parent_path)
+                parent().context.raw[key] = value
+
+            # Handle root paths
+            else:
+                core.root().context.raw[key] = value
 
         return None
 
     def __getattr__(self, item):
+        # Ensure that this reference is valid
+        self().enforce_validation()
+
         qr = self(item)
         if isinstance(qr, Reflective):
             return qr
@@ -102,9 +119,13 @@ class Reflective:
         return qr
 
     def __setattr__(self, key, value):
+        # Ensure that this reference is valid
+        self().enforce_validation()
         self(key, value)
 
     def __delattr__(self, item):
+        # Ensure that this reference is valid
+        self().enforce_validation()
         qr = self(item)
         if isinstance(qr, Reflective):
             qr().context.delete()
@@ -113,9 +134,13 @@ class Reflective:
             result().context.delete()
 
     def __getitem__(self, item):
+        # Ensure that this reference is valid
+        self().enforce_validation()
         return self(item)
 
     def __setitem__(self, item, value):
+        # Ensure that this reference is valid
+        self().enforce_validation()
         # Pass-through assignments for internal storage
         if item == NAMESPACE_KEY or (NAMESPACE_KEY in self.__dict__ and item == self.__dict__[NAMESPACE_KEY]):
             self.__dict__[item] = value
@@ -124,6 +149,8 @@ class Reflective:
         self(item, value)
 
     def __delitem__(self, item):
+        # Ensure that this reference is valid
+        self().enforce_validation()
         qr = self(item)
         if isinstance(qr, Reflective):
             qr().context.delete()
@@ -133,31 +160,45 @@ class Reflective:
 
     def __enter__(self) -> 'Reflective':
         """ Returns a reference to the RCore instance bound to this Reflective instance. """
+        # Ensure that this reference is valid
+        self().enforce_validation()
         return self()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
     def __repr__(self) -> str:
+        # Ensure that this reference is valid
+        self().enforce_validation()
         return self().ref.__repr__()
 
     def __str__(self) -> str:
+        # Ensure that this reference is valid
+        self().enforce_validation()
         return str(self().ref)
 
     def __instancecheck__(self, instance):
+        # Ensure that this reference is valid
+        self().enforce_validation()
         return isinstance(self().context.ref, instance)
 
     def __eq__(self, other: any) -> bool:
+        # Ensure that this reference is valid
+        self().enforce_validation()
         if isinstance(other, Reflective):
             return self().ref == other().ref
         return self().ref == other
 
     def __ne__(self, other: any) -> bool:
+        # Ensure that this reference is valid
+        self().enforce_validation()
         if isinstance(other, Reflective):
             return self().ref != other().ref
         return self().ref != other
 
     def __len__(self) -> int:
+        # Ensure that this reference is valid
+        self().enforce_validation()
         return len(self().ref)
 
 
@@ -172,5 +213,7 @@ class RComposite(RType):
 class RSimple(RType):
 
     def __setattr__(self, key: str, value: any) -> None:
+        # Ensure that this reference is valid
+        self().enforce_validation()
         raise AttributeError(f'<{self.__class__.__name__}> This object does not support assignment of the "{key}" '
                              + 'attribute.')

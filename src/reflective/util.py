@@ -112,3 +112,24 @@ class RUtil:
 
         return references
 
+    @staticmethod
+    def update(source: str, ref: str, value: any) -> any:
+        """
+        Updates the given source string with the given value for matching Reflective reference strings.
+        Additionally, pass-through typing support is provided for source strings that contain single references.
+        """
+        from reflective.query import QueryResult
+
+        ref_pattern = f'$r{{{ref}}}'
+
+        # Provide typed references when sole references are found
+        if source.replace(ref_pattern, '').strip() == '':
+            if isinstance(value, QueryResult) and len(value) == 1:
+                return value[0]
+            return value
+
+        # Update the string value with the query value
+        source = source.replace(ref_pattern, str(value))
+
+        return source
+
