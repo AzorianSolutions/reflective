@@ -51,6 +51,7 @@ jobs:
           python3 -m pip install --upgrade wheel
           python3 -m pip install --upgrade pytest
           python3 -m pip install --upgrade twine
+          python3 -m pip install --upgrade pyyaml
 
       # Install the package from source
       - name: Install Source Code
