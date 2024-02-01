@@ -96,7 +96,7 @@ class ContextManager:
         self._path = list(path) if path is not None else []
         self._delimiter = delimiter if delimiter is not None else DEFAULT_DELIMITER
 
-    def get(self, path: list) -> 'Reflective':
+    def get(self, path: list, use_cache: bool = False) -> 'Reflective':
         """ Returns a Reflective instance for the given path. """
         from reflective.core import RCore
         from reflective.types import Reflective
@@ -106,7 +106,7 @@ class ContextManager:
         cache_key: str = RCore.hash_value(path_key)
 
         # Check if the path is already cached
-        if cache_key in self.cache:
+        if use_cache and cache_key in self.cache:
             return self.cache[cache_key]
 
         # Create a new instance and cache a reference to it

@@ -119,6 +119,10 @@ class Query:
                     self._path[i] = slice(start, stop, step)
                     continue
 
+    def __str__(self):
+        """ Returns the string representation of the Query object. """
+        return self._query
+
 
 class QueryResult(UserList):
     """ This class provides a data object to represent the result of a query. It inherently mimics the behavior of
@@ -172,13 +176,14 @@ class QueryManager:
         self._core = core
         self._delimiter = delimiter if delimiter is not None else DEFAULT_DELIMITER
 
-    def __call__(self, query: Union[str, int, slice, Query]) -> QueryResult:
+    def __call__(self, query: Union[str, int, slice, Query], use_cache: bool = True) -> QueryResult:
         """ Executes a query on the bound Reflective instance. """
-        return self.query(query)
+        return self.query(query, use_cache)
 
     def query(self, query: Union[str, int, slice, Query], use_cache: bool = True) -> QueryResult:
         """ Executes a query on the bound Reflective instance. """
         from functools import reduce
+        from reflective.types import Reflective
 
         # Convert the query to a Query object if it isn't already
         if type(query) is not Query:
@@ -195,7 +200,7 @@ class QueryManager:
         ref: Union['Reflective', None] = None
         found: bool = True
         path = query.path
-        root = self.context.ref if query.is_relative else self.context.root
+        root = self.context.raw if query.is_relative else self.context.root
         context = self.context if query.is_relative else self.core.root().context
 
         try:
