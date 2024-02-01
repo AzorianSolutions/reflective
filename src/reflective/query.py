@@ -183,7 +183,7 @@ class QueryManager:
     def query(self, query: Union[str, int, slice, Query], use_cache: bool = False) -> QueryResult:
         """ Executes a query on the bound Reflective instance. """
         from functools import reduce
-        from reflective.types import Reflective
+        from reflective.types import Reflective, RString
 
         # Convert the query to a Query object if it isn't already
         if type(query) is not Query:
@@ -195,6 +195,9 @@ class QueryManager:
         if use_cache and not type(query.path[-1]) is slice:
             if cache_key in self.cache:
                 return self.cache[cache_key]
+
+        if query.type is slice and isinstance(self.context.ref, str):
+            return QueryResult(query, [self.context.ref[query.query]])
 
         results: list = []
         ref: Union['Reflective', None] = None

@@ -104,3 +104,33 @@ def test_callable_access():
     assert r('d')(1) == 2
     assert r('d')(2) == 3
     assert r('d')(3) == 4
+
+
+def test_mixed_access():
+    source = {
+        'app': {
+            'name': 'My App',
+            'tags': ['tag1', 'tag2'],
+            'authors': [
+                {
+                    'name': 'John Doe',
+                    'email': 'john.doe@whereswaldo.com',
+                },
+                {
+                    'name': 'Jane Doe',
+                    'email': 'jane.doe@whereswaldo.com',
+                }
+            ]
+        }
+    }
+
+    r = Reflective(source)
+
+    assert r('app/name') == 'My App'
+    assert r('app/tags/0') == 'tag1'
+    assert r('app/authors/0') == {'name': 'John Doe', 'email': 'john.doe@whereswaldo.com'}
+
+    assert r['app/authors/0/name'] == 'John Doe'
+    assert r('app/authors')[1].name == 'Jane Doe'
+    assert r('app/authors')(1)('email') == 'jane.doe@whereswaldo.com'
+    assert r.app.authors[0]('/app/tags/0') == 'tag1'
