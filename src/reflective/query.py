@@ -121,7 +121,7 @@ class Query:
 
     def __str__(self):
         """ Returns the string representation of the Query object. """
-        return self._query
+        return str(self._query)
 
 
 class QueryResult(UserList):
@@ -205,7 +205,7 @@ class QueryManager:
         context = self.core.root().context
         root = context.raw
 
-        if len(self.core.path):
+        if query.is_relative and len(self.core.path):
             root = reduce(lambda c, k: c[k], self.core.path, root)
 
         try:
@@ -220,7 +220,8 @@ class QueryManager:
                 for item in ref:
                     results.append(item)
             else:
-                lookup = context.get(self.core.path + query.path)
+                path = self.core.path + query.path if query.is_relative else query.path
+                lookup = context.get(path)
                 results.append(lookup)
 
         if use_cache:
