@@ -2,16 +2,15 @@
 
 Reflective provides a plethora of ways to access and manipulate structured data.
 
-**Notice!** This project is in early-stage development so the API will change aggressively,
-and many features are not currently present.
+**Notice!** This project is in early-stage development so the API may change aggressively,
+and some features are not currently present.
 
 ## Branch Status
 
 | Branch  | CodeQL                                                                                                                                                                                                                 | Build                                                                                                                                                                                             |
 |---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `main`  | [![CodeQL](https://github.com/AzorianSolutions/reflective/actions/workflows/codeql-analysis.yml/badge.svg?branch=main)](https://github.com/AzorianSolutions/reflective/actions/workflows/codeql-analysis.yml)          | [![Build](https://github.com/AzorianSolutions/reflective/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/AzorianSolutions/reflective/actions/workflows/build.yml)          |
 | `dev`   | [![CodeQL](https://github.com/AzorianSolutions/reflective/actions/workflows/codeql-analysis.yml/badge.svg?branch=dev)](https://github.com/AzorianSolutions/reflective/actions/workflows/codeql-analysis.yml)           | [![Build](https://github.com/AzorianSolutions/reflective/actions/workflows/build.yml/badge.svg?branch=dev)](https://github.com/AzorianSolutions/reflective/actions/workflows/build.yml)           |
-| `0.1.0` | [![CodeQL](https://github.com/AzorianSolutions/reflective/actions/workflows/codeql-analysis.yml/badge.svg?branch=release/0.1.0)](https://github.com/AzorianSolutions/reflective/actions/workflows/codeql-analysis.yml) | [![Build](https://github.com/AzorianSolutions/reflective/actions/workflows/build.yml/badge.svg?branch=release/0.1.0)](https://github.com/AzorianSolutions/reflective/actions/workflows/build.yml) |
+| `0.2.0` | [![CodeQL](https://github.com/AzorianSolutions/reflective/actions/workflows/codeql-analysis.yml/badge.svg?branch=release/0.2.0)](https://github.com/AzorianSolutions/reflective/actions/workflows/codeql-analysis.yml) | [![Build](https://github.com/AzorianSolutions/reflective/actions/workflows/build.yml/badge.svg?branch=release/0.2.0)](https://github.com/AzorianSolutions/reflective/actions/workflows/build.yml) |
 
 ## Table of Contents
 
@@ -52,9 +51,9 @@ print(r.app.name)  # Appy McAppface
 print(r.app['description'])  # The Appy McAppface app is a great!
 print(r.app('version'))  # 1.2.3
 print(r.app.tags)  # ['production', 'release', 'v1.2.3']
-print(r.app.tags.raw)  # ['production', 'release', 'v$r{/app/version}']
+print(r.app.tags().raw)  # ['production', 'release', 'v$r{/app/version}']
 print(r.app.tags[2])  # v1.2.3
-print(r.app.tags[2].raw)  # v$r{/app/version}
+print(r.app.tags[2]().raw)  # v$r{/app/version}
 ```
 
 For a much better explanation of all the features you see here, please see

@@ -232,8 +232,8 @@ assert isinstance(r.str, str) # True
 assert isinstance(r.int, int) # True
 assert isinstance(r.float, float) # True
 assert isinstance(r.complex, complex) # True
-assert isinstance(r.bool, bool) # True
-assert isinstance(r.none, type(None)) # True
+assert isinstance(r.bool().ref, bool) # True
+assert isinstance(r.none().ref, type(None)) # True
 assert isinstance(r.dict, dict) # True
 assert isinstance(r.list, list) # True
 assert isinstance(r.tuple, tuple) # True
@@ -333,7 +333,7 @@ print( r.dict('a') ) # 1
 print( r.dict.b ) # 123.456
 print( type(r.dict.b) ) # <class 'reflective.types.numeric.RFloat'>
 print( r.dict.a('/reference') ) # 1
-print( r.dict.a('/reference').raw ) # $r{/dict/a}
+print( r.dict.a('/reference')().raw ) # $r{/dict/a}
 ```
 
 #### Environment Variable References

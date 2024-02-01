@@ -11,6 +11,8 @@ for planned and existing releases.
 - [x] Provide support for accessing data using object, dictionary, and list syntax.
 - [x] Provide support for querying data by path.
 - [x] Provide support for updating data using object, dictionary, and list syntax.
-- [x] Provide support for updating data by path.
 - [x] Provide support for dynamic references with pass-through data typing.
-- [ ] Provide support for instantiating Reflective from JSON and YAML file system paths.
+
+### Version 0.1.1
+
+- [x] Provide support for deleting data using object, dictionary, and list syntax.
