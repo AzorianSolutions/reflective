@@ -72,7 +72,7 @@ class Reflective:
             return core.context.ref
 
         query = Query(query)
-        qr: QueryResult = core.query(query, use_cache=False)
+        qr: QueryResult = core.query(query)
 
         # Handle query only scenarios
         if total_args == 1:
@@ -88,7 +88,6 @@ class Reflective:
 
         # If the references to be set don't already exist, create them in the parent
         if not len(qr):
-            # FIXME: The way this is set might be wrong.
             parent = core.context.get(query.path[:-1])
             parent().context.raw[query.path[-1]] = value
 

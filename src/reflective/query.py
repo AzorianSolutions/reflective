@@ -176,11 +176,11 @@ class QueryManager:
         self._core = core
         self._delimiter = delimiter if delimiter is not None else DEFAULT_DELIMITER
 
-    def __call__(self, query: Union[str, int, slice, Query], use_cache: bool = True) -> QueryResult:
+    def __call__(self, query: Union[str, int, slice, Query], use_cache: bool = False) -> QueryResult:
         """ Executes a query on the bound Reflective instance. """
         return self.query(query, use_cache)
 
-    def query(self, query: Union[str, int, slice, Query], use_cache: bool = True) -> QueryResult:
+    def query(self, query: Union[str, int, slice, Query], use_cache: bool = False) -> QueryResult:
         """ Executes a query on the bound Reflective instance. """
         from functools import reduce
         from reflective.types import Reflective
