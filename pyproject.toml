@@ -1,6 +1,6 @@
 [project]
 name = "reflective"
-version = "0.2.0"
+version = "0.2.1"
 authors = [
   { name="Azorian Solutions", email="help@azorian.solutions" },
 ]
