@@ -199,7 +199,10 @@ class Reflective:
     def __len__(self) -> int:
         # Ensure that this reference is valid
         self().enforce_validation()
-        return len(self().ref)
+        value = self().ref
+        if isinstance(value, bool):
+            return 1 if value is True else 0
+        return len(value)
 
 
 class RType(Reflective):
