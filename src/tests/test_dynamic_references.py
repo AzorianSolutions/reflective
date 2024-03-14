@@ -20,6 +20,18 @@ def test_references():
     assert reference == changed_value
 
 
+def test_replacements():
+    """Test that value replacements function."""
+
+    r = Reflective({'var1': 'Test String 1', 'var2': 'Test String 2', 'var3': 'My $r{var1}', 'var4': '$r{var2}-1'})
+
+    print(r.var3)
+    print(r.var4)
+
+    assert r.var3 == 'My Test String 1'
+    assert r.var4 == 'Test String 2-1'
+
+
 def test_reference_types():
     """Test that the value types of the returned references are correct."""
 

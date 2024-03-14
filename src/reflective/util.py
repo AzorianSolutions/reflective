@@ -129,6 +129,9 @@ class RUtil:
             return value
 
         # Update the string value with the query value
+        if isinstance(value, QueryResult) and len(value) == 1:
+            value = value[0]
+
         source = source.replace(ref_pattern, str(value))
 
         return source
